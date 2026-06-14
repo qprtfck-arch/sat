@@ -50,6 +50,14 @@ const paths = {
   globe: <><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z" /></>,
   'alert-circle': <><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></>,
   compass: <><circle cx="12" cy="12" r="10" /><path d="m16 8-2 6-6 2 2-6z" /></>,
+  coins: <><circle cx="9" cy="9" r="6" /><path d="M21 12a6 6 0 0 1-9 5.2M12.5 6.2A6 6 0 0 1 15 9" /></>,
+  gift: <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" /></>,
+  flame: <path d="M12 2c1 4 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 1.5-3.5C9 9 11 8.5 12 2Z" />,
+  gem: <path d="M6 3h12l4 6-10 12L2 9z" />,
+  box: <><path d="M21 8 12 3 3 8v8l9 5 9-5z" /><path d="M3 8l9 5 9-5M12 13v8" /></>,
+  map: <path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" />,
+  zap: <path d="M13 2 3 14h7l-1 8 10-12h-7z" />,
+  star: <path d="m12 3 2.9 5.9 6.6.9-4.7 4.6 1.1 6.5L12 18l-5.9 3.1 1.1-6.5L2.5 9.8l6.6-.9z" />,
 };
 
 export default function Icon({ name, size = 20, className = '', strokeWidth = 1.75, fill = 'none', ...rest }) {

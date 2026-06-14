@@ -70,6 +70,16 @@ export function AppProvider({ children }) {
     return user;
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const { user } = await api.get('/auth/me');
+      setUser(user);
+      return user;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
   const t = useCallback((key) => translate(lang, key), [lang]);
 
@@ -82,6 +92,7 @@ export function AppProvider({ children }) {
         register,
         logout,
         updateProfile,
+        refreshUser,
         setUser,
         theme,
         toggleTheme,

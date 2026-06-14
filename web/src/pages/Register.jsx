@@ -6,7 +6,7 @@ import Icon from '../components/Icon.jsx';
 export default function Register() {
   const { register } = useApp();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -18,8 +18,8 @@ export default function Register() {
     setError('');
     setBusy(true);
     try {
-      await register(form);
-      navigate('/onboarding', { replace: true });
+      const user = await register(form);
+      navigate(user.role === 'teacher' ? '/teach' : '/onboarding', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -52,6 +52,28 @@ export default function Register() {
           )}
 
           <form onSubmit={submit} className="mt-5 space-y-4">
+            <div>
+              <label className="label">Я регистрируюсь как</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'student', label: 'Ученик', icon: 'user' },
+                  { id: 'teacher', label: 'Учитель', icon: 'graduation-cap' },
+                ].map((r) => (
+                  <button
+                    type="button"
+                    key={r.id}
+                    onClick={() => setForm((f) => ({ ...f, role: r.id }))}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                      form.role === r.id
+                        ? 'border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200'
+                        : 'border-slate-300 text-slate-600 hover:border-brand-400 dark:border-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Icon name={r.icon} size={16} /> {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="label" htmlFor="name">Имя</label>
               <input id="name" className="input" autoComplete="name" value={form.name} onChange={set('name')} placeholder="Как тебя зовут?" required />

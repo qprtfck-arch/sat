@@ -5,10 +5,11 @@ import { requireAdmin, publicUser } from '../lib/auth.js';
 const router = Router();
 
 router.get('/stats', requireAdmin, async (_req, res) => {
-  const [users, students, opportunities, courses, lessons, enrollments, completed] =
+  const [users, students, teachers, opportunities, courses, lessons, enrollments, completed] =
     await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: 'student' } }),
+      prisma.user.count({ where: { role: 'teacher' } }),
       prisma.opportunity.count(),
       prisma.course.count(),
       prisma.lesson.count(),
@@ -19,6 +20,7 @@ router.get('/stats', requireAdmin, async (_req, res) => {
     stats: {
       users,
       students,
+      teachers,
       opportunities,
       courses,
       lessons,

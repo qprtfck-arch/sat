@@ -12,9 +12,12 @@ const router = Router();
 
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body || {};
+    const { email, password, name, role } = req.body || {};
     if (!email || !password || !name)
       return res.status(400).json({ error: 'Укажите имя, email и пароль' });
+
+    // self-registration may only create a student or a teacher (never admin)
+    const safeRole = role === 'teacher' ? 'teacher' : 'student';
 
     const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (exists) return res.status(409).json({ error: 'Пользователь с таким email уже существует' });
@@ -24,6 +27,8 @@ router.post('/register', async (req, res) => {
         email: email.toLowerCase(),
         password: hashPassword(password),
         name,
+        role: safeRole,
+        onboarded: safeRole === 'teacher', // teachers skip the student onboarding
       },
     });
     const token = signToken(user);

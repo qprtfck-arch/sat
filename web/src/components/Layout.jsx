@@ -63,8 +63,22 @@ const NAV_ICONS = {
   '/courses': 'book-open',
   '/assistant': 'sparkles',
   '/dashboard': 'bar-chart',
+  '/rewards': 'gift',
+  '/teach': 'graduation-cap',
   '/admin': 'settings',
 };
+
+function CoinsBadge({ coins }) {
+  return (
+    <Link
+      to="/rewards"
+      className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-2.5 py-1.5 text-sm font-bold text-amber-600 transition hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300"
+      title="Mentoria Coins"
+    >
+      <Icon name="coins" size={16} /> {coins ?? 0}
+    </Link>
+  );
+}
 
 export default function Layout() {
   const { user, logout, t } = useApp();
@@ -77,6 +91,9 @@ export default function Layout() {
     { to: '/assistant', label: t('nav.assistant') },
   ];
   if (user) navItems.push({ to: '/dashboard', label: t('nav.dashboard') });
+  if (user) navItems.push({ to: '/rewards', label: t('nav.rewards') });
+  if (user?.role === 'teacher' || user?.role === 'admin')
+    navItems.push({ to: '/teach', label: t('nav.teach') });
   if (user?.role === 'admin') navItems.push({ to: '/admin', label: t('nav.admin') });
 
   const linkClass = ({ isActive }) =>
@@ -111,6 +128,7 @@ export default function Layout() {
             <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-2">
+                <CoinsBadge coins={user.coins} />
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-2 rounded-xl border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700"

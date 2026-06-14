@@ -64,3 +64,11 @@ export function requireAdmin(req, res, next) {
     return res.status(403).json({ error: 'Доступ только для администратора' });
   next();
 }
+
+// Teacher (mentor) or admin.
+export function requireTeacher(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Требуется авторизация' });
+  if (req.user.role !== 'teacher' && req.user.role !== 'admin')
+    return res.status(403).json({ error: 'Доступ только для преподавателей' });
+  next();
+}

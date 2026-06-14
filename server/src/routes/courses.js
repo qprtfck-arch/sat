@@ -1,8 +1,23 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { requireAuth, requireAdmin } from '../lib/auth.js';
+import { requireAuth, requireAdmin, requireTeacher } from '../lib/auth.js';
 
 const router = Router();
+
+// Admin manages any course; a teacher only their own.
+async function ensureCanManage(req, res, courseId) {
+  if (req.user.role === 'admin') return true;
+  const course = await prisma.course.findUnique({ where: { id: courseId } });
+  if (!course) {
+    res.status(404).json({ error: 'Курс не найден' });
+    return false;
+  }
+  if (course.authorId !== req.user.id) {
+    res.status(403).json({ error: 'Можно редактировать только свои курсы' });
+    return false;
+  }
+  return true;
+}
 
 const parseCourse = (b) => ({
   title: b.title,
@@ -55,6 +70,30 @@ router.get('/', async (req, res) => {
       progressPercent: total ? Math.round((done / total) * 100) : 0,
     };
   });
+  res.json({ items });
+});
+
+// Courses authored by the current teacher (mentor portal).
+router.get('/mine', requireTeacher, async (req, res) => {
+  const where = req.user.role === 'admin' ? {} : { authorId: req.user.id };
+  const courses = await prisma.course.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    include: { lessons: { select: { id: true } }, _count: { select: { enrollments: true } } },
+  });
+  const items = courses.map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    level: c.level,
+    subject: c.subject,
+    direction: c.direction,
+    tags: c.tags,
+    emoji: c.emoji,
+    color: c.color,
+    lessonCount: c.lessons.length,
+    enrollments: c._count.enrollments,
+  }));
   res.json({ items });
 });
 
@@ -124,13 +163,16 @@ router.post('/:id/enroll', requireAuth, async (req, res) => {
   }
 });
 
-// ---- admin: course CRUD ----
-router.post('/', requireAdmin, async (req, res) => {
-  const item = await prisma.course.create({ data: parseCourse(req.body || {}) });
+// ---- course CRUD (teacher owns own, admin manages all) ----
+router.post('/', requireTeacher, async (req, res) => {
+  const item = await prisma.course.create({
+    data: { ...parseCourse(req.body || {}), authorId: req.user.id },
+  });
   res.status(201).json({ item });
 });
 
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireTeacher, async (req, res) => {
+  if (!(await ensureCanManage(req, res, req.params.id))) return;
   const item = await prisma.course.update({
     where: { id: req.params.id },
     data: parseCourse(req.body || {}),
@@ -138,13 +180,15 @@ router.put('/:id', requireAdmin, async (req, res) => {
   res.json({ item });
 });
 
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requireTeacher, async (req, res) => {
+  if (!(await ensureCanManage(req, res, req.params.id))) return;
   await prisma.course.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
 
-// ---- admin: lesson CRUD nested under a course ----
-router.post('/:id/lessons', requireAdmin, async (req, res) => {
+// ---- lesson CRUD nested under a course ----
+router.post('/:id/lessons', requireTeacher, async (req, res) => {
+  if (!(await ensureCanManage(req, res, req.params.id))) return;
   const b = req.body || {};
   const count = await prisma.lesson.count({ where: { courseId: req.params.id } });
   const lesson = await prisma.lesson.create({
@@ -161,7 +205,10 @@ router.post('/:id/lessons', requireAdmin, async (req, res) => {
   res.status(201).json({ lesson });
 });
 
-router.put('/lessons/:lessonId', requireAdmin, async (req, res) => {
+router.put('/lessons/:lessonId', requireTeacher, async (req, res) => {
+  const existing = await prisma.lesson.findUnique({ where: { id: req.params.lessonId } });
+  if (!existing) return res.status(404).json({ error: 'Урок не найден' });
+  if (!(await ensureCanManage(req, res, existing.courseId))) return;
   const b = req.body || {};
   const data = {};
   if (b.title !== undefined) data.title = b.title;
@@ -174,7 +221,10 @@ router.put('/lessons/:lessonId', requireAdmin, async (req, res) => {
   res.json({ lesson });
 });
 
-router.delete('/lessons/:lessonId', requireAdmin, async (req, res) => {
+router.delete('/lessons/:lessonId', requireTeacher, async (req, res) => {
+  const existing = await prisma.lesson.findUnique({ where: { id: req.params.lessonId } });
+  if (!existing) return res.status(404).json({ error: 'Урок не найден' });
+  if (!(await ensureCanManage(req, res, existing.courseId))) return;
   await prisma.lesson.delete({ where: { id: req.params.lessonId } });
   res.json({ ok: true });
 });

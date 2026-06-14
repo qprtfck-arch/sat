@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth } from '../lib/auth.js';
+import { awardCoins } from '../lib/coins.js';
 
 const router = Router();
+
+const LESSON_REWARD = 10;
 
 // Mark a lesson complete (optionally with a quiz score). Auto-enrolls.
 router.post('/:lessonId/complete', requireAuth, async (req, res) => {
@@ -18,6 +21,12 @@ router.post('/:lessonId/complete', requireAuth, async (req, res) => {
     });
 
     const quizScore = req.body?.quizScore != null ? Number(req.body.quizScore) : null;
+
+    // award coins only the first time this lesson is completed
+    const prev = await prisma.lessonProgress.findUnique({
+      where: { userId_lessonId: { userId: req.user.id, lessonId: lesson.id } },
+    });
+    const firstCompletion = !prev || !prev.completed;
 
     await prisma.lessonProgress.upsert({
       where: { userId_lessonId: { userId: req.user.id, lessonId: lesson.id } },
@@ -40,11 +49,18 @@ router.post('/:lessonId/complete', requireAuth, async (req, res) => {
         lessonId: { in: lessons.map((l) => l.id) },
       },
     });
+    let coinsAwarded = 0;
+    if (firstCompletion) {
+      await awardCoins(req.user.id, LESSON_REWARD, 'lesson', lesson.title);
+      coinsAwarded = LESSON_REWARD;
+    }
+
     res.json({
       ok: true,
       completedLessons: done,
       total: lessons.length,
       courseCompleted: done === lessons.length,
+      coinsAwarded,
     });
   } catch (e) {
     console.error(e);

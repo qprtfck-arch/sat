@@ -12,6 +12,9 @@ import Courses from './pages/Courses.jsx';
 import CourseDetail from './pages/CourseDetail.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Assistant from './pages/Assistant.jsx';
+import Rewards from './pages/Rewards.jsx';
+import Roadmap from './pages/Roadmap.jsx';
+import Teach from './pages/Teach.jsx';
 import Admin from './pages/Admin.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -38,6 +41,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rewards"
+          element={
+            <ProtectedRoute>
+              <Rewards />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/roadmap"
+          element={
+            <ProtectedRoute>
+              <Roadmap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teach"
+          element={
+            <ProtectedRoute roles={['teacher', 'admin']}>
+              <Teach />
             </ProtectedRoute>
           }
         />

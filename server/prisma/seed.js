@@ -29,6 +29,16 @@ async function main() {
     },
   });
 
+  const teacher = await prisma.user.create({
+    data: {
+      email: 'teacher@mentoria.io',
+      password: hash('teacher123'),
+      name: 'Дамир Ускенбаев',
+      role: 'teacher',
+      onboarded: true,
+    },
+  });
+
   const student = await prisma.user.create({
     data: {
       email: 'student@mentoria.io',
@@ -418,7 +428,7 @@ async function main() {
 
   for (const c of courses) {
     const { lessons, ...courseData } = c;
-    const created = await prisma.course.create({ data: courseData });
+    const created = await prisma.course.create({ data: { ...courseData, authorId: teacher.id } });
     let order = 0;
     for (const l of lessons) {
       await prisma.lesson.create({
@@ -468,6 +478,7 @@ async function main() {
 
   console.log('✅ Seed complete.');
   console.log('   Admin:   admin@mentoria.io / admin123');
+  console.log('   Teacher: teacher@mentoria.io / teacher123');
   console.log('   Student: student@mentoria.io / student123');
 }
 

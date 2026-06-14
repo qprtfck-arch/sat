@@ -50,11 +50,12 @@ export function Section({ title, action, children, subtitle }) {
   );
 }
 
-export function ProtectedRoute({ children, adminOnly = false }) {
+export function ProtectedRoute({ children, adminOnly = false, roles = null }) {
   const { user, loading } = useApp();
   const location = useLocation();
   if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
   return children;
 }

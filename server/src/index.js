@@ -15,6 +15,8 @@ import lessonRoutes from './routes/lessons.js';
 import dashboardRoutes from './routes/dashboard.js';
 import adminRoutes from './routes/admin.js';
 import assistantRoutes from './routes/assistant.js';
+import gamificationRoutes from './routes/gamification.js';
+import aiRoutes from './routes/ai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -34,6 +36,8 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Serve the built frontend (web/dist) if it exists — single-port demo.
 const webDist = path.resolve(__dirname, '../../web/dist');

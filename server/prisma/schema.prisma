@@ -3,46 +3,56 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("student") // student | admin
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  name     String
+  role     String @default("student") // student | teacher | admin
 
   // onboarding profile
-  grade     Int? // 8..12
-  interests String   @default("") // CSV of direction tags: Business,STEM,Finance...
-  subjects  String   @default("") // CSV of subjects: Math,English,Physics...
-  goals     String   @default("") // CSV: university,olympiad,scholarship...
-  language  String   @default("ru")
-  onboarded Boolean  @default(false)
+  grade     Int?
+  interests String  @default("") // CSV of direction tags
+  subjects  String  @default("") // CSV of subjects
+  goals     String  @default("") // CSV of goals
+  language  String  @default("ru")
+  onboarded Boolean @default(false)
+
+  // gamification
+  coins          Int       @default(50)
+  streak         Int       @default(0)
+  lastStreakDate DateTime?
+  pairedWithId   String? // partner for Social-to-Learn paired streak
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  saved       SavedOpportunity[]
-  enrollments Enrollment[]
-  progress    LessonProgress[]
+  saved            SavedOpportunity[]
+  enrollments      Enrollment[]
+  progress         LessonProgress[]
+  authoredCourses  Course[]           @relation("CourseAuthor")
+  coinTransactions CoinTransaction[]
+  inventory        InventoryItem[]
 }
 
 model Opportunity {
   id           String    @id @default(uuid())
   title        String
-  category     String // Competition, Scholarship, Internship, Summer School, Olympiad, Volunteer, Research
-  direction    String // Business, STEM, Finance, Programming, Science, Social Impact
-  format       String // online | offline | hybrid
+  category     String
+  direction    String
+  format       String
   deadline     DateTime?
   description  String
   requirements String    @default("")
   applyUrl     String    @default("")
   gradeMin     Int       @default(8)
   gradeMax     Int       @default(12)
-  tags         String    @default("") // CSV extra tags for matching
+  tags         String    @default("")
   location     String    @default("Online")
   organizer    String    @default("Mentoria")
   createdAt    DateTime  @default(now())
@@ -67,15 +77,17 @@ model Course {
   id          String   @id @default(uuid())
   title       String
   description String
-  level       String   @default("Beginner") // Beginner | Intermediate | Advanced
+  level       String   @default("Beginner")
   subject     String   @default("")
   direction   String   @default("")
   tags        String   @default("")
   emoji       String   @default("📘")
   color       String   @default("#6366f1")
+  authorId    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  author      User?        @relation("CourseAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   lessons     Lesson[]
   enrollments Enrollment[]
 }
@@ -86,9 +98,9 @@ model Lesson {
   order       Int      @default(0)
   title       String
   content     String   @default("")
-  videoUrl    String   @default("") // empty = placeholder
+  videoUrl    String   @default("")
   durationMin Int      @default(10)
-  quiz        String   @default("") // JSON string: [{question, options[], answer}]
+  quiz        String   @default("") // JSON string
   createdAt   DateTime @default(now())
 
   course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -112,11 +124,36 @@ model LessonProgress {
   userId      String
   lessonId    String
   completed   Boolean   @default(false)
-  quizScore   Int? // percent 0..100
+  quizScore   Int?
   completedAt DateTime?
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+}
+
+// ---- gamification ----
+
+model CoinTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int // positive = earned, negative = spent
+  type      String // signup, streak, lesson, trivia, case, gift_in, gift_out, promo
+  meta      String   @default("")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InventoryItem {
+  id         String   @id @default(uuid())
+  userId     String
+  itemType   String // emoji/skin/badge identifier
+  name       String
+  rarity     String // Common | Rare | Epic | Legendary
+  isEquipped Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
