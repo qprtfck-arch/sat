@@ -27,7 +27,7 @@ function StatCard({ icon, value, label, tone = 'brand' }) {
       <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tones[tone]}`}>
         <Icon name={icon} size={20} />
       </span>
-      <div className="mt-3 font-display text-3xl font-extrabold">{value}</div>
+      <div className="mt-3 font-display text-3xl font-extrabold nums">{value}</div>
       <div className="text-sm text-slate-500">{label}</div>
     </div>
   );
@@ -82,7 +82,7 @@ export default function Dashboard() {
       </div>
 
       {/* stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon="heart" tone="rose" value={stats.savedCount} label="В избранном" />
         <StatCard icon="graduation-cap" tone="brand" value={stats.enrolledCount} label="Курсов начато" />
         <StatCard icon="check-circle" tone="emerald" value={stats.lessonsCompleted} label="Уроков пройдено" />

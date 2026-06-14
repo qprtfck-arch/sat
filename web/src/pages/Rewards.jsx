@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { useApp } from '../lib/store.jsx';
 import { Spinner, Section } from '../components/common.jsx';
 import Icon from '../components/Icon.jsx';
+import { useToast } from '../components/Toast.jsx';
 
 const RARITY = {
   Common: { color: '#94a3b8', label: 'Обычный' },
@@ -18,13 +19,17 @@ function Card({ children, className = '' }) {
 
 function StreakCard({ data, onChange }) {
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
   const checkin = async () => {
     setBusy(true);
     try {
       const r = await api.post('/gamification/streak/checkin');
       onChange();
       if (!r.already) {
-        alert(r.bonus ? `Стрик ${r.streak} дней! +${5 + r.bonus} монет (бонус!)` : `+5 монет! Стрик: ${r.streak}`);
+        toast(
+          r.bonus ? `Стрик ${r.streak} дней! +${5 + r.bonus} монет (бонус!)` : `+5 монет! Стрик: ${r.streak} 🔥`,
+          'coins'
+        );
       }
     } finally {
       setBusy(false);
@@ -36,7 +41,7 @@ function StreakCard({ data, onChange }) {
         <Icon name="flame" size={20} />
         <h3 className="font-display font-semibold text-slate-900 dark:text-slate-100">Дневной стрик</h3>
       </div>
-      <div className="mt-3 font-display text-4xl font-extrabold">{data.streak} 🔥</div>
+      <div className="mt-3 font-display text-4xl font-extrabold nums">{data.streak} 🔥</div>
       <p className="mt-1 text-sm text-slate-500">Заходи каждый день: +5 монет, каждый 7-й день — бонус +50.</p>
       <button onClick={checkin} disabled={busy || data.checkedInToday} className="btn-primary mt-4 w-full">
         {data.checkedInToday ? 'Сегодня отмечено ✓' : busy ? 'Отмечаем…' : 'Отметиться сегодня'}
@@ -48,6 +53,7 @@ function StreakCard({ data, onChange }) {
 function TriviaCard({ onCoins }) {
   const [trivia, setTrivia] = useState(null);
   const [picked, setPicked] = useState(null);
+  const toast = useToast();
 
   const load = () => api.get('/ai/daily-trivia').then(setTrivia).catch(() => {});
   useEffect(() => {
@@ -60,7 +66,10 @@ function TriviaCard({ onCoins }) {
     const correct = i === trivia.correct_index;
     if (!trivia.alreadyClaimed) {
       const r = await api.post('/ai/daily-trivia/claim', { correct }).catch(() => null);
-      if (r?.awarded) onCoins();
+      if (r?.awarded) {
+        onCoins();
+        toast(`Верно! +${r.awarded} монет 🎉`, 'coins');
+      }
     }
   };
 
@@ -118,17 +127,19 @@ function TriviaCard({ onCoins }) {
 function CaseCard({ coins, onCoins }) {
   const [opening, setOpening] = useState(false);
   const [reward, setReward] = useState(null);
+  const toast = useToast();
   const open = async () => {
     setOpening(true);
     setReward(null);
     try {
       const r = await api.post('/gamification/case/open');
-      // small suspense
-      await new Promise((res) => setTimeout(res, 700));
+      await new Promise((res) => setTimeout(res, 750)); // suspense
       setReward(r.item);
       onCoins();
+      const rc = RARITY[r.item.rarity];
+      toast(`${r.item.itemType} ${r.item.name} — ${rc.label}!`, r.item.rarity === 'Legendary' ? 'coins' : 'success');
     } catch (e) {
-      alert(e.message);
+      toast(e.message, 'error');
     } finally {
       setOpening(false);
     }
@@ -140,16 +151,21 @@ function CaseCard({ coins, onCoins }) {
         <Icon name="box" size={20} />
         <h3 className="font-display font-semibold text-slate-900 dark:text-slate-100">Кейс Mentoria</h3>
       </div>
-      <p className="mt-1 text-sm text-slate-500">Открой кейс за 100 монет и получи предмет (Common 70% · Rare 20% · Epic 8% · Legendary 2%).</p>
+      <p className="mt-1 text-sm text-slate-500">Открой кейс за 100 монет (Common 70% · Rare 20% · Epic 8% · Legendary 2%).</p>
 
-      <div className="my-4 flex h-32 items-center justify-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+      <div
+        className="my-4 flex h-32 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 transition-colors dark:border-slate-700"
+        style={reward ? { borderColor: rc.color, borderStyle: 'solid', boxShadow: `inset 0 0 40px ${rc.color}33` } : undefined}
+      >
         {opening && !reward ? (
-          <div className="animate-pulse text-5xl">🎁</div>
+          <div className="animate-bounce text-5xl">🎁</div>
         ) : reward ? (
-          <div className="animate-fade-up text-center" style={{ color: rc.color }}>
-            <div className="text-5xl">{reward.itemType}</div>
-            <div className="mt-1 font-display font-bold">{reward.name}</div>
-            <div className="text-xs font-semibold uppercase">{rc.label}</div>
+          <div className="animate-reveal-pop text-center" style={{ color: rc.color }}>
+            <div className="text-5xl drop-shadow" style={{ filter: `drop-shadow(0 0 10px ${rc.color}88)` }}>
+              {reward.itemType}
+            </div>
+            <div className="mt-1 font-display font-bold text-slate-900 dark:text-slate-100">{reward.name}</div>
+            <div className="text-xs font-semibold uppercase tracking-wide">{rc.label}</div>
           </div>
         ) : (
           <div className="text-5xl opacity-40">📦</div>
@@ -166,16 +182,19 @@ function CaseCard({ coins, onCoins }) {
 function PromoCard({ onChange }) {
   const [code, setCode] = useState('');
   const [msg, setMsg] = useState(null);
+  const toast = useToast();
   const submit = async (e) => {
     e.preventDefault();
     setMsg(null);
     try {
       const r = await api.post('/gamification/promo', { code });
       setMsg({ ok: true, text: r.message });
+      toast(r.message, 'coins');
       setCode('');
       onChange();
     } catch (e) {
       setMsg({ ok: false, text: e.message });
+      toast(e.message, 'error');
     }
   };
   return (
@@ -197,15 +216,18 @@ function PromoCard({ onChange }) {
 function GiftCard({ onChange }) {
   const [form, setForm] = useState({ toEmail: '', amount: 10 });
   const [msg, setMsg] = useState(null);
+  const toast = useToast();
   const submit = async (e) => {
     e.preventDefault();
     setMsg(null);
     try {
       const r = await api.post('/gamification/gift', { toEmail: form.toEmail, amount: Number(form.amount) });
       setMsg({ ok: true, text: r.message });
+      toast(r.message, 'success');
       onChange();
     } catch (e) {
       setMsg({ ok: false, text: e.message });
+      toast(e.message, 'error');
     }
   };
   return (
@@ -247,7 +269,7 @@ function Leaderboard() {
               <span className="w-6 text-center">{medal[i] || i + 1}</span>
               <span>{u.name}</span>
             </div>
-            <span className="flex items-center gap-1 text-amber-500">
+            <span className="flex items-center gap-1 text-amber-500 nums">
               <Icon name="coins" size={14} /> {u.coins}
             </span>
           </div>
@@ -282,7 +304,7 @@ export default function Rewards() {
         </div>
         <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-5 py-3 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
           <Icon name="coins" size={28} />
-          <span className="font-display text-3xl font-extrabold">{data.coins}</span>
+          <span className="font-display text-3xl font-extrabold nums">{data.coins}</span>
         </div>
       </div>
 
@@ -302,7 +324,7 @@ export default function Rewards() {
         {data.inventory.length === 0 ? (
           <p className="text-sm text-slate-500">Пока пусто — открой кейс выше.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+          <div className="stagger grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
             {data.inventory.map((it) => {
               const rc = RARITY[it.rarity] || RARITY.Common;
               return (

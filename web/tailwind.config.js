@@ -35,10 +35,24 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        'toast-in': {
+          '0%': { opacity: '0', transform: 'translateY(12px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'reveal-pop': {
+          '0%': { opacity: '0', transform: 'scale(0.4) rotate(-8deg)' },
+          '60%': { transform: 'scale(1.12) rotate(3deg)' },
+          '100%': { opacity: '1', transform: 'scale(1) rotate(0)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both',
         'fade-in': 'fade-in 0.3s ease-out both',
+        'toast-in': 'toast-in 0.25s cubic-bezier(0.16,1,0.3,1) both',
+        'reveal-pop': 'reveal-pop 0.5s cubic-bezier(0.16,1,0.3,1) both',
       },
     },
   },

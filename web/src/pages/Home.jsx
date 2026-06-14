@@ -92,7 +92,7 @@ export default function Home() {
 
       {/* features */}
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => (
             <div key={f.title} className="card p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover">
               <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
@@ -108,7 +108,7 @@ export default function Home() {
       {/* how it works */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <h2 className="text-center text-2xl font-bold tracking-tight">Как это работает</h2>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s) => (
             <div key={s.n} className="card relative p-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 font-display text-lg font-bold text-white">

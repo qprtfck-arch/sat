@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useApp } from '../lib/store.jsx';
 import OpportunityCard from '../components/OpportunityCard.jsx';
-import { Spinner, Empty } from '../components/common.jsx';
+import { GridSkeleton, Empty } from '../components/common.jsx';
 import Icon from '../components/Icon.jsx';
 import {
   CATEGORIES,
@@ -151,13 +151,13 @@ export default function Opportunities() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <GridSkeleton count={6} />
       ) : items.length === 0 ? (
         <Empty icon="search" title="Ничего не найдено" hint="Попробуй изменить фильтры или поисковый запрос." />
       ) : (
         <>
-          <p className="mb-4 text-sm text-slate-500">Найдено: {items.length}</p>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <p className="mb-4 text-sm text-slate-500">Найдено: <span className="nums">{items.length}</span></p>
+          <div className="stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((o) => (
               <OpportunityCard key={o.id} opp={o} saved={savedIds.has(o.id)} onToggleSave={toggleSave} />
             ))}

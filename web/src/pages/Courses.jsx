@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { useApp } from '../lib/store.jsx';
 import CourseCard from '../components/CourseCard.jsx';
-import { Spinner, Empty } from '../components/common.jsx';
+import { GridSkeleton, Empty } from '../components/common.jsx';
 
 export default function Courses() {
   const { user } = useApp();
@@ -26,11 +26,11 @@ export default function Courses() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <GridSkeleton count={3} />
       ) : items.length === 0 ? (
         <Empty icon="book-open" title="Курсов пока нет" hint="Загляни позже — мы добавляем новые курсы." />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="stagger grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c) => (
             <CourseCard key={c.id} course={c} />
           ))}
