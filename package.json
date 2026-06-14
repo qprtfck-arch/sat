@@ -1,0 +1,21 @@
+{
+  "name": "mentoria-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mentoria Hub — EdTech platform MVP (opportunities + async courses)",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run db:setup -w server && npm run build -w web",
+    "db:setup": "npm run db:setup -w server",
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web",
+    "start": "npm run start -w server",
+    "seed": "npm run seed -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

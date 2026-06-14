@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("student") // student | admin
+
+  // onboarding profile
+  grade     Int? // 8..12
+  interests String   @default("") // CSV of direction tags: Business,STEM,Finance...
+  subjects  String   @default("") // CSV of subjects: Math,English,Physics...
+  goals     String   @default("") // CSV: university,olympiad,scholarship...
+  language  String   @default("ru")
+  onboarded Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  saved       SavedOpportunity[]
+  enrollments Enrollment[]
+  progress    LessonProgress[]
+}
+
+model Opportunity {
+  id           String    @id @default(uuid())
+  title        String
+  category     String // Competition, Scholarship, Internship, Summer School, Olympiad, Volunteer, Research
+  direction    String // Business, STEM, Finance, Programming, Science, Social Impact
+  format       String // online | offline | hybrid
+  deadline     DateTime?
+  description  String
+  requirements String    @default("")
+  applyUrl     String    @default("")
+  gradeMin     Int       @default(8)
+  gradeMax     Int       @default(12)
+  tags         String    @default("") // CSV extra tags for matching
+  location     String    @default("Online")
+  organizer    String    @default("Mentoria")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  savedBy SavedOpportunity[]
+}
+
+model SavedOpportunity {
+  id            String   @id @default(uuid())
+  userId        String
+  opportunityId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, opportunityId])
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  level       String   @default("Beginner") // Beginner | Intermediate | Advanced
+  subject     String   @default("")
+  direction   String   @default("")
+  tags        String   @default("")
+  emoji       String   @default("📘")
+  color       String   @default("#6366f1")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+  enrollments Enrollment[]
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  courseId    String
+  order       Int      @default(0)
+  title       String
+  content     String   @default("")
+  videoUrl    String   @default("") // empty = placeholder
+  durationMin Int      @default(10)
+  quiz        String   @default("") // JSON string: [{question, options[], answer}]
+  createdAt   DateTime @default(now())
+
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  quizScore   Int? // percent 0..100
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
