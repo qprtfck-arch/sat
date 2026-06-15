@@ -37,4 +37,16 @@ app.use('/api/assistant', assistantRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/ai', aiRoutes);
 
+// Global error handler — return JSON 500 instead of leaking/handing.
+app.use((err, _req, res, _next) => {
+  console.error('[error]', err?.message || err);
+  if (res.headersSent) return;
+  const isDbConfig = /Environment variable not found|DATABASE_URL/.test(err?.message || '');
+  res.status(500).json({
+    error: isDbConfig
+      ? 'Сервер не настроен: отсутствует переменная окружения DATABASE_URL.'
+      : 'Внутренняя ошибка сервера',
+  });
+});
+
 export default app;

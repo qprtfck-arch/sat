@@ -24,6 +24,11 @@ if (fs.existsSync(webDist)) {
   );
 }
 
+// Keep the process alive on stray errors (e.g. a misconfigured env var)
+// so a single bad request doesn't crash the whole service.
+process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e?.message || e));
+process.on('uncaughtException', (e) => console.error('[uncaughtException]', e?.message || e));
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`\n  Mentoria Hub server → http://localhost:${PORT}\n`);
