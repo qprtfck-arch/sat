@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
   "installCommand": "npm ci || npm install",
   "buildCommand": "npm ci || npm install; npm run db:generate --workspace server && npm run build --workspace web",
   "outputDirectory": "web/dist",
