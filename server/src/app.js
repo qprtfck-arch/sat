@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 
+import { prisma } from './lib/prisma.js';
 import { attachUser } from './lib/auth.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
@@ -24,6 +25,21 @@ app.use(express.json({ limit: '2mb' }));
 app.use(attachUser);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, name: 'Mentoria Hub API' }));
+
+// Diagnostic: verifies the DB connection and reports the real error if any.
+app.get('/api/health/db', async (_req, res) => {
+  const hasUrl = !!process.env.DATABASE_URL;
+  try {
+    const users = await prisma.user.count();
+    res.json({ ok: true, hasDatabaseUrl: hasUrl, users });
+  } catch (e) {
+    res.status(500).json({
+      ok: false,
+      hasDatabaseUrl: hasUrl,
+      error: e?.message || String(e),
+    });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
