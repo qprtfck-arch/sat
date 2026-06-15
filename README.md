@@ -105,6 +105,28 @@ AI_MODEL="gemini-2.0-flash"
 # Альтернативы: Groq (api.groq.com/openai/v1), OpenAI, OpenRouter — меняется только 3 переменные
 ```
 
+## ☁️ Деплой на Vercel
+
+Проект готов к Vercel: фронт (Vite) собирается в статику, а Express-API работает как
+**serverless-функция** (`api/index.js` → `server/src/app.js`). Конфиг — в `vercel.json`.
+
+1. Импортируй репозиторий в Vercel (Root Directory = корень репо).
+2. В **Settings → Environment Variables** добавь:
+   | Переменная | Значение |
+   |-----------|----------|
+   | `DATABASE_URL` | строка Supabase (pooler **6543**, с `?pgbouncer=true`) |
+   | `DIRECT_URL` | строка Supabase (порт **5432**) |
+   | `JWT_SECRET` | длинная случайная строка |
+   | `AI_API_KEY` *(опц.)* | ключ Gemini/Groq/OpenAI |
+   | `AI_BASE_URL`, `AI_MODEL` *(опц.)* | endpoint и модель |
+3. Deploy. Сборка сама выполнит `prisma generate` и `vite build`.
+
+> Схему БД в Supabase применяй локально один раз: `npm run db:setup -w server`.
+> Без `DATABASE_URL`/`JWT_SECRET` функция упадёт (`FUNCTION_INVOCATION_FAILED`).
+>
+> Альтернатива «без возни»: **Render/Railway** — там приложение запускается как обычный
+> Node-сервер (`npm install` → `npm run build` → `npm start`) вообще без правок.
+
 ## 🗺️ Пользовательский путь (демо)
 
 1. Регистрация (ученик/учитель) → онбординг
