@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install --include=dev",
-  "buildCommand": "npm run db:generate --workspace server && npm run build --workspace web",
+  "installCommand": "npm install",
+  "buildCommand": "npm install && npm run db:generate --workspace server && npm run build --workspace web",
   "outputDirectory": "web/dist",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
